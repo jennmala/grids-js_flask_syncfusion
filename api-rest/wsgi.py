@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
@@ -70,15 +71,48 @@ class Features(Resource):
 
     @cross_origin()
     def put(self):
-        req = request.json['data']
-        for item in req:
-            print('id', item['id'], 'order', item['order'])
-            feature = PB.query.filter_by(id=item['id']).first()
-            feature.order = item['order']
+        parsedRequest = request.json['data']
+
+        if 'orderedData' in parsedRequest.keys():
+            req = parsedRequest['orderedData']
+            for item in req:
+                feature = PB.query.filter_by(id=item['id']).first()
+                feature.order = item['order']
+                db.session.commit()
+            response = make_response(jsonify({ 
+                'msg': 'ordered!',
+            }))
+
+        if 'toSprint' in parsedRequest.keys():
+            req = parsedRequest['toSprint']
+            feature = PB.query.filter_by(id=req['id']).first()
+            featuresAfterCurrent = PB.query.filter_by(version='product backlog').all()
+            for f in featuresAfterCurrent:
+                if f.order > feature.order and f.id != req['id']:
+                    print('FEATURE', f)
+                    othFeature = PB.query.filter_by(id=f.id).first()
+                    othFeature.order = f.order - 1
+            feature.version = req['version']
+            feature.order = NULL
             db.session.commit()
-        response = make_response(jsonify({ 
-            'msg': 'ordered!',
-        }))
+            response = make_response(jsonify({ 
+                'msg': 'added to sprint!',
+            }))
+
+        if 'toProductBacklog' in parsedRequest.keys():
+            req = parsedRequest['toProductBacklog']
+            feature = PB.query.filter_by(id=req['id']).first()
+            featuresAfterCurrent = PB.query.filter_by(version='product backlog').all()
+            for f in featuresAfterCurrent:                
+                othFeature = PB.query.filter_by(id=f.id).first()
+                othFeature.order = f.order + 1
+            feature.version = req['version']
+            feature.order = 0
+            db.session.commit()
+            response = make_response(jsonify({ 
+                'msg': 'removed from sprint!',
+            }))
+
         response.headers.add('Access-Control-Allow-Methods', 'PUT')
         response.headers.add('Content-Type', 'application/json')
         return response
