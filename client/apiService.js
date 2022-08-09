@@ -37,7 +37,7 @@ export const changeOrder = async (data) => {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-        body: JSON.stringify({ data: data }),
+        body: JSON.stringify({ data: { orderedData: data } }),
       });
       
       console.log(response)
@@ -46,3 +46,37 @@ export const changeOrder = async (data) => {
             return Promise.reject(new Error('Something was wrong'));            
         }
 }
+
+export const addToSprint = async (data) => {
+    const response = await fetch(`${BASE_URL}/features`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        body: JSON.stringify({ data: { toSprint: data } }),
+      });
+      
+      console.log(response)
+        if (!response.ok) {
+            console.log('ERROR');
+            return Promise.reject(new Error('Something was wrong'));            
+        }
+} 
+
+export const removeFromSprint = async (data) => {
+    const response = await fetch(`${BASE_URL}/features`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        body: JSON.stringify({ data: { toProductBacklog: data } }),
+      });
+      
+      console.log(response)
+        if (!response.ok) {
+            console.log('ERROR');
+            return Promise.reject(new Error('Something was wrong'));            
+        }
+} 
