@@ -1,8 +1,6 @@
-from asyncio.windows_events import NULL
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
-from flask_marshmallow import Marshmallow
 
 from flask_cors import CORS, cross_origin
 
@@ -15,10 +13,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 db.init_app(app)
 api = Api()
-ma = Marshmallow(app)
 
 
-# sqlite tabe
+# sqlite table
 class PB(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), unique=True)
@@ -30,7 +27,6 @@ class PB(db.Model):
 
     def __repr__(self):
         return f'<users {self.id}>'
-
 
 
 
@@ -89,11 +85,10 @@ class Features(Resource):
             featuresAfterCurrent = PB.query.filter_by(version='product backlog').all()
             for f in featuresAfterCurrent:
                 if f.order > feature.order and f.id != req['id']:
-                    print('FEATURE', f)
                     othFeature = PB.query.filter_by(id=f.id).first()
                     othFeature.order = f.order - 1
             feature.version = req['version']
-            feature.order = NULL
+            feature.order = 0
             db.session.commit()
             response = make_response(jsonify({ 
                 'msg': 'added to sprint!',
@@ -107,7 +102,6 @@ class Features(Resource):
                 othFeature = PB.query.filter_by(id=f.id).first()
                 othFeature.order = f.order + 1
             feature.version = req['version']
-            feature.order = 0
             db.session.commit()
             response = make_response(jsonify({ 
                 'msg': 'removed from sprint!',
@@ -116,12 +110,12 @@ class Features(Resource):
         response.headers.add('Access-Control-Allow-Methods', 'PUT')
         response.headers.add('Content-Type', 'application/json')
         return response
-                         
-      
 
     
 api.add_resource(Features, '/features', '/features/<int:feature_id>')
 api.init_app(app)
+
+
 
 
 
